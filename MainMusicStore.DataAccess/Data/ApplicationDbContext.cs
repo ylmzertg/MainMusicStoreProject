@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using MainMusicStore.Models.DbModels;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace MainMusicStore.Data
@@ -9,5 +10,6 @@ namespace MainMusicStore.Data
             : base(options)
         {
         }
+        public DbSet<Category> Categories { get; set; }
     }
 }
