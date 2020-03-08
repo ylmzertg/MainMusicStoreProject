@@ -24,9 +24,4 @@
     <ProjectReference Include="..\MainMusicStore.Utility\MainMusicStore.Utility.csproj" />
   </ItemGroup>
 
-
-  <ItemGroup>
-    <Folder Include="Areas\Admin\Controllers\" />
-  </ItemGroup>
-
 </Project>
