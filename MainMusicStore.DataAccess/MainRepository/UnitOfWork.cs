@@ -11,6 +11,7 @@ namespace MainMusicStore.DataAccess.MainRepository
         {
             _db = db;
             category = new CategoryRepository(_db);
+            CoverType = new CoverTypeRepository(_db);
             sp_call = new SPCallRepository(_db);
         }
 
@@ -18,6 +19,7 @@ namespace MainMusicStore.DataAccess.MainRepository
 
         public ISPCallRepository sp_call { get; private set; }
 
+        public ICoverTypeRepository CoverType { get; private set; }
 
         public void Dispose()
         {
