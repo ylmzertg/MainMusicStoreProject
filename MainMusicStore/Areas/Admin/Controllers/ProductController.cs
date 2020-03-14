@@ -47,6 +47,14 @@ namespace MainMusicStore.Areas.Admin.Controllers
             if (deleteData == null)
                 return Json(new { success = false, message = "Data Not Found!" });
 
+            string webRootPath = _hostEnvironment.WebRootPath;
+            var imagePath = Path.Combine(webRootPath, deleteData.ImageUrl.TrimStart('\\'));
+
+            if (System.IO.File.Exists(imagePath))
+            {
+                System.IO.File.Delete(imagePath);
+            }
+
             _uow.Product.Remove(deleteData);
             _uow.Save();
             return Json(new { success = true, message = "Delete Operation Successfully" });

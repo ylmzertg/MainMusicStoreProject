@@ -6,7 +6,7 @@
     var title = "Create Product";
 }
 
-<form method="post">
+<form method="post" enctype="multipart/form-data">
     <div class="row p-3 border">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         @if (Model.Product.Id != 0)
@@ -52,7 +52,7 @@
                 </div>
                 <div class="col-8">
                     @*<input asp-for="Product.Description" class="form-control" />
-                    <span asp-validation-for="Product.Description" class="text-danger"></span>*@
+                        <span asp-validation-for="Product.Description" class="text-danger"></span>*@
                     <textarea asp-for="Product.Description" class=" form-control"></textarea>
                 </div>
             </div>
@@ -118,7 +118,7 @@
                     Image
                 </div>
                 <div class="col-8">
-                    <input type="file" id="uploadBox" multiple class="form-control" />
+                    <input type="file" name="files" id="uploadBox" multiple class="form-control" />
                 </div>
             </div>
 
@@ -142,6 +142,12 @@
                 </div>
             </div>
         </div>
+        @if (Model.Product.Id != 0)
+        {
+            <div class="col-3 offset-1 pt-4">
+                <img src="@Model.Product.ImageUrl" width="100%" style="border-radius:3px;border:1px;"/>
+            </div>
+        }
     </div>
 </form>
 
