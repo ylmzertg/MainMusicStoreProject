@@ -1,10 +1,13 @@
 ﻿using MainMusicStore.DataAccess.IMainRepository;
 using MainMusicStore.Models.DbModels;
+using MainMusicStore.Utility;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MainMusicStore.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(Roles = ProjectConstant.Role_Admin)]
     public class CategoryController : Controller
     {
         #region Variables
@@ -37,11 +40,11 @@ namespace MainMusicStore.Areas.Admin.Controllers
         {
             var deleteData = _uow.Category.Get(id);
             if (deleteData == null)
-                return Json(new { success = false,message ="Data Not Found!"});
+                return Json(new { success = false, message = "Data Not Found!" });
 
             _uow.Category.Remove(deleteData);
             _uow.Save();
-            return Json(new { success = true ,message ="Delete Operation Successfully"});
+            return Json(new { success = true, message = "Delete Operation Successfully" });
         }
 
         #endregion

@@ -35,7 +35,7 @@ namespace MainMusicStore
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddIdentity<IdentityUser,IdentityRole>()
+            services.AddIdentity<IdentityUser, IdentityRole>()
                 .AddDefaultTokenProviders()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
@@ -45,6 +45,25 @@ namespace MainMusicStore
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
             services.AddRazorPages();
             services.AddMvc();
+
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = $"/Identity/Account/Login";
+                options.LogoutPath = $"/Identity/Account/Logout";
+                options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
+            });
+
+            services.AddAuthentication().AddFacebook(options => 
+            {
+                options.AppId = "2513409585565721";
+                options.AppSecret = "501b2633b7f710a4949feaa22393fcb8";
+            });
+
+            services.AddAuthentication().AddGoogle(options=> 
+            {
+                options.ClientId = "694148995513-0dk6b6esvidmgcmdht2m7v0of1fr7dk6.apps.googleusercontent.com";
+                options.ClientSecret = "HexARz6BI0kVoziZgLNH_fj_";
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
