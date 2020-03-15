@@ -14,6 +14,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MainMusicStore.DataAccess.IMainRepository;
 using MainMusicStore.DataAccess.MainRepository;
+using MainMusicStore.Utility;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace MainMusicStore
 {
@@ -32,13 +34,17 @@ namespace MainMusicStore
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
-            services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+
+            services.AddIdentity<IdentityUser,IdentityRole>()
+                .AddDefaultTokenProviders()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddSingleton<IEmailSender, EmailSender>();
 
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
             services.AddRazorPages();
+            services.AddMvc();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
