@@ -54,16 +54,23 @@ namespace MainMusicStore
                 options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
             });
 
-            services.AddAuthentication().AddFacebook(options => 
+            services.AddAuthentication().AddFacebook(options =>
             {
                 options.AppId = "2513409585565721";
                 options.AppSecret = "501b2633b7f710a4949feaa22393fcb8";
             });
 
-            services.AddAuthentication().AddGoogle(options=> 
+            services.AddAuthentication().AddGoogle(options =>
             {
                 options.ClientId = "694148995513-0dk6b6esvidmgcmdht2m7v0of1fr7dk6.apps.googleusercontent.com";
                 options.ClientSecret = "HexARz6BI0kVoziZgLNH_fj_";
+            });
+
+            services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
             });
         }
 
@@ -85,7 +92,7 @@ namespace MainMusicStore
             app.UseStaticFiles();
 
             app.UseRouting();
-
+            app.UseSession();
             app.UseAuthentication();
             app.UseAuthorization();
 

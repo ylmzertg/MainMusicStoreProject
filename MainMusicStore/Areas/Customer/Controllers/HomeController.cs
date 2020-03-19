@@ -10,6 +10,8 @@ using MainMusicStore.DataAccess.IMainRepository;
 using MainMusicStore.Models.DbModels;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+using MainMusicStore.Utility;
 
 namespace MainMusicStore.Areas.Customer.Controllers
 {
@@ -28,6 +30,15 @@ namespace MainMusicStore.Areas.Customer.Controllers
         public IActionResult Index()
         {
             IEnumerable<Product> productList = _uow.Product.GetAll(includeProperties: "Category,CoverType");
+
+            var claimsIdentity = (ClaimsIdentity)User.Identity;
+            var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+            if (claim != null)
+            {
+                var shoppingCount = _uow.ShoppingCart.GetAll(a => a.ApplicationUserId == claim.Value).ToList().Count();
+
+                HttpContext.Session.SetInt32(ProjectConstant.shoppingCart, shoppingCount);
+            }
             return View(productList);
         }
 
@@ -72,6 +83,10 @@ namespace MainMusicStore.Areas.Customer.Controllers
                 }
 
                 _uow.Save();
+
+                var shoppingCount = _uow.ShoppingCart.GetAll(a => a.ApplicationUserId == cartObj.ApplicationUserId).ToList().Count();
+
+                HttpContext.Session.SetInt32(ProjectConstant.shoppingCart, shoppingCount);
 
                 return RedirectToAction(nameof(Index));
             }
