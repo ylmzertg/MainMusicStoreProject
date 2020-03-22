@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using Stripe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +32,7 @@ namespace MainMusicStore.Areas.Customer.Controllers
             _userManager = userManager;
         }
 
+        [BindProperty]
         public ShoppingCartVM ShoppingCartVM { get; set; }
 
 
@@ -169,7 +171,7 @@ namespace MainMusicStore.Areas.Customer.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Summary")]
-        public IActionResult SummmaryPost()
+        public IActionResult SummmaryPost(string stripeToken)
         {
             var claimsIdentity = (ClaimsIdentity)User.Identity;
             var claims = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
@@ -204,7 +206,45 @@ namespace MainMusicStore.Areas.Customer.Controllers
             _uow.Save();
             HttpContext.Session.SetInt32(ProjectConstant.shoppingCart, 0);
 
+            if (stripeToken == null)
+            {
+                ShoppingCartVM.OrderHeader.PaymentDueDate = DateTime.Now.AddDays(30);
+                ShoppingCartVM.OrderHeader.PaymentStatus = ProjectConstant.PaymentStatusDelayedPayment;
+                ShoppingCartVM.OrderHeader.OrderStatus = ProjectConstant.StatusApproved;
+            }
+            else
+            {
+                var options = new ChargeCreateOptions
+                {
+                    Amount = Convert.ToInt32(ShoppingCartVM.OrderHeader.OrderTotal * 100),
+                    Currency = "usd",
+                    Description = "Order Id : " + ShoppingCartVM.OrderHeader.Id,
+                    Source = stripeToken
+                };
+
+                var service = new ChargeService();
+                Charge charge = service.Create(options);
+
+                if (charge.BalanceTransactionId == null)
+                    ShoppingCartVM.OrderHeader.PaymentStatus = ProjectConstant.PaymentStatusRejected;
+                else
+                    ShoppingCartVM.OrderHeader.TransactionId = charge.BalanceTransactionId;
+
+                if (charge.Status.ToLower()=="succeeded")
+                {
+                    ShoppingCartVM.OrderHeader.PaymentStatus = ProjectConstant.PaymentStatusApproved;
+                    ShoppingCartVM.OrderHeader.OrderStatus = ProjectConstant.StatusApproved;
+                    ShoppingCartVM.OrderHeader.PaymentDate = DateTime.Now;
+                }
+            }
+            _uow.Save();
             return RedirectToAction("OrderConfirmation", "Cart", new { id = ShoppingCartVM.OrderHeader.Id });
+        }
+
+
+        public IActionResult OrderConfirmation(int id)
+        {
+            return View(id);
         }
     }
 }
