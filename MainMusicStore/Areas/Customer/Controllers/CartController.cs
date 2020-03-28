@@ -93,18 +93,29 @@ namespace MainMusicStore.Areas.Customer.Controllers
         }
 
 
-        public IActionResult Plus(int cartId)
+        public IActionResult Plus(int id)
         {
-            var cart = _uow.ShoppingCart.GetFirstOrDefault(x => x.Id == cartId, includeProperties: "Product");
+            try
+            {
+                var cart = _uow.ShoppingCart.GetFirstOrDefault(x => x.Id == id, includeProperties: "Product");
 
-            if (cart == null)
-                return RedirectToAction("Index");
+                if (cart == null)
+                    return Json(false);
+                //return RedirectToAction("Index");
 
-            cart.Count += 1;
-            cart.Price = ProjectConstant.GetPriceBaseOnQuantity(cart.Count, cart.Product.Price, cart.Product.Price50, cart.Product.Price100);
+                cart.Count += 1;
+                cart.Price = ProjectConstant.GetPriceBaseOnQuantity(cart.Count, cart.Product.Price, cart.Product.Price50, cart.Product.Price100);
 
-            _uow.Save();
-            return RedirectToAction("Index");
+                _uow.Save();
+                //var allShoppingCart = _uow.ShoppingCart.GetAll();
+
+                return Json(true);
+                //return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                return Json(false);
+            }
         }
 
         public IActionResult Minus(int cartId)

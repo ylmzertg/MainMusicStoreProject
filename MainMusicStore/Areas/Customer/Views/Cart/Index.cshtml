@@ -40,7 +40,8 @@
                                     </div>
                                     <div class="col-6 col-sm-4 col-lg-6">
                                         <div class="float-right mx-1">
-                                            <a asp-action="plus" asp-route-cartId="@item.Id"> <i class="fas fa-plus"></i></a>
+                                            @*<a asp-action="plus" asp-route-cartId="@item.Id" id="addCartItem"> <i class="fas fa-plus"></i></a>*@
+                                            <a data-id="@item.Id" id="addCartItem"> <i class="fas fa-plus"></i></a>
                                         </div>
                                         <div class="float-right mx-1">
                                             <a asp-action="minus" asp-route-cartId="@item.Id"> <i class="fas fa-minus"></i></a>
@@ -68,8 +69,8 @@
                     <div class="card-footer">
                         <div class="card-footer row">
                             @if (!Model.OrderHeader.ApplicationUser.EmailConfirmed
-                           && Model.OrderHeader.ApplicationUser.CompanyId != null
-                           && Model.OrderHeader.ApplicationUser.Company.IsAuthorizedCompany)
+                   && Model.OrderHeader.ApplicationUser.CompanyId != null
+                   && Model.OrderHeader.ApplicationUser.Company.IsAuthorizedCompany)
                             {
                                 <div class="col-8 text-danger">Email Must be confirmed for authorized customers</div>
                                 <div class="col-4">
@@ -96,3 +97,29 @@
         <div>There is no item in shopping cart</div>
     }
 </form>
+
+
+@section Scripts{
+    <script type="text/javascript">
+        $('#addCartItem').click(function () {
+
+            var cartId = $('#addCartItem').data("id");
+
+            $.ajax({
+                type: 'POST',
+                url: 'Cart/Plus',
+                data: { id: cartId }
+            }).done(function (result) {
+                if (result) {
+                     toastr.success("İşleminiz Başarıyla Gerçekleşmiştir");
+                }
+                else {
+                    toastr.warning("İşleminiz Gerçekleştirilirken Bir Hata Oluştu!");
+                }
+            }).fail(function (xhr) {
+            });
+        });
+
+    </script>
+
+}
