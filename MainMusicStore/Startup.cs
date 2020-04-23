@@ -8,15 +8,18 @@ using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.EntityFrameworkCore;
-using MainMusicStore.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using MainMusicStore.DataAccess.IMainRepository;
-using MainMusicStore.DataAccess.MainRepository;
-using MainMusicStore.Utility;
+
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Stripe;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using MainMusicStore.Data;
+using MainMusicStore.Utility;
+using MainMusicStore.DataAccess.Initiliazer;
+using MainMusicStore.DataAccess.IMainRepository;
+using MainMusicStore.DataAccess.MainRepository;
 
 namespace MainMusicStore
 {
@@ -32,42 +35,47 @@ namespace MainMusicStore
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            /*
+             *     services.AddDbContext<ApplicationDbContext>(options => {
+                options.UseSqlServer(
+                    Configuration.GetConnectionString("DefaultConnection"));
+                options.EnableSensitiveDataLogging(true);
+                });
+             */
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
-
-            services.AddIdentity<IdentityUser, IdentityRole>()
-                .AddDefaultTokenProviders()
+            services.AddIdentity<IdentityUser, IdentityRole>().AddDefaultTokenProviders()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
-
-            services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddSingleton<IEmailSender, EmailSender>();
+            services.AddSingleton<ITempDataProvider, CookieTempDataProvider>();
+
             services.Configure<EmailOptions>(Configuration);
             services.Configure<StripeSettings>(Configuration.GetSection("Stripe"));
-
+            //services.Configure<BrainTreeSettings>(Configuration.GetSection("BrainTree"));
+            //services.Configure<TwilioSettings>(Configuration.GetSection("Twilio"));
+            //services.AddSingleton<IBrainTreeGate, BrainTreeGate>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IDbInitiliazer, DbInitializer>();
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
             services.AddRazorPages();
-            services.AddMvc();
-
             services.ConfigureApplicationCookie(options =>
             {
                 options.LoginPath = $"/Identity/Account/Login";
                 options.LogoutPath = $"/Identity/Account/Logout";
                 options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
             });
-
             services.AddAuthentication().AddFacebook(options =>
             {
-                options.AppId = "2513409585565721";
-                options.AppSecret = "501b2633b7f710a4949feaa22393fcb8";
+                options.AppId = "479144716347128";
+                options.AppSecret = "8888cefba55e9cfa06a2b28f0495e533";
             });
-
             services.AddAuthentication().AddGoogle(options =>
             {
-                options.ClientId = "694148995513-0dk6b6esvidmgcmdht2m7v0of1fr7dk6.apps.googleusercontent.com";
-                options.ClientSecret = "HexARz6BI0kVoziZgLNH_fj_";
-            });
+                options.ClientId = "751413081977-ct8rrlcf8cgt8f42b5evots13mg458lt.apps.googleusercontent.com";
+                options.ClientSecret = "LPRLug47n8OQsYAirUVGofLw";
 
+            });
             services.AddSession(options =>
             {
                 options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -77,7 +85,7 @@ namespace MainMusicStore
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IDbInitiliazer dbInitializer)
         {
             if (env.IsDevelopment())
             {
@@ -90,16 +98,15 @@ namespace MainMusicStore
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
-
-            StripeConfiguration.ApiKey = Configuration.GetSection("Stripe")["SecretKey"];
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();
+            StripeConfiguration.ApiKey = Configuration.GetSection("Stripe")["SecretKey"];
             app.UseSession();
             app.UseAuthentication();
             app.UseAuthorization();
-
+            dbInitializer.Initiliaze();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(

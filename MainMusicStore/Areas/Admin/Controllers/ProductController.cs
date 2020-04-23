@@ -1,4 +1,9 @@
-﻿using MainMusicStore.DataAccess.IMainRepository;
+﻿using Amazon.Runtime;
+using Amazon.S3;
+using Amazon.S3.Model;
+using Amazon.S3.Transfer;
+using Amazon.S3.Util;
+using MainMusicStore.DataAccess.IMainRepository;
 using MainMusicStore.Models.DbModels;
 using MainMusicStore.Models.ViewModels;
 using MainMusicStore.Utility;
@@ -6,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.IO;
 using System.Linq;
@@ -16,9 +22,14 @@ namespace MainMusicStore.Areas.Admin.Controllers
     [Authorize(Roles = ProjectConstant.Role_Admin)]
     public class ProductController : Controller
     {
+
         #region Variables
         private readonly IUnitOfWork _uow;
         private readonly IWebHostEnvironment _hostEnvironment;
+        AmazonS3Client client;
+        public BasicAWSCredentials credentials = new BasicAWSCredentials(AWSSettings.AccessKeyID, AWSSettings.SecretKeyID);
+        string bucketName = "mytestudemybucketapp1";
+
         #endregion
 
         #region CTOR
@@ -26,6 +37,8 @@ namespace MainMusicStore.Areas.Admin.Controllers
         {
             _uow = uow;
             _hostEnvironment = hostEnvironment;
+            client = new AmazonS3Client(credentials, Amazon.RegionEndpoint.EUWest1);
+
         }
         #endregion
 
@@ -100,7 +113,8 @@ namespace MainMusicStore.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Upsert(ProductVM productVM)
+        [Obsolete]
+        public async System.Threading.Tasks.Task<IActionResult> Upsert(ProductVM productVM)
         {
             if (ModelState.IsValid)
             {
@@ -116,6 +130,7 @@ namespace MainMusicStore.Areas.Admin.Controllers
 
                     if (productVM.Product.ImageUrl != null)
                     {
+                        var imageUrl = productVM.Product.ImageUrl;
                         var imagePath = Path.Combine(webRootPath, productVM.Product.ImageUrl.TrimStart('\\'));
                         if (System.IO.File.Exists(imagePath))
                         {
@@ -127,7 +142,53 @@ namespace MainMusicStore.Areas.Admin.Controllers
                     {
                         files[0].CopyTo(fileStreams);
                     }
-                    productVM.Product.ImageUrl = @"\images\products\" + fileName + extenstion;
+
+                    var pathRoot = AppDomain.CurrentDomain.BaseDirectory;
+                    using (var fileStreams = new FileStream(Path.Combine(pathRoot, fileName + extenstion), FileMode.Create))
+                    {
+                        files[0].CopyTo(fileStreams);
+                    }
+
+                    //TODO:CreateBucket
+                    try
+                    {
+                        if (await AmazonS3Util.DoesS3BucketExistAsync(client, bucketName))
+                        {
+                            throw new Exception("Oluşturulmak istenilen Bucket Zaten Mevcut");
+                        }
+                        else
+                        {
+                            var bucketRequest = new PutBucketRequest
+                            {
+                                BucketName = bucketName,
+                                UseClientRegion = true
+                            };
+
+                            var bucketResponse = client.PutBucketAsync(bucketRequest);
+                            if (bucketResponse.Result.HttpStatusCode == System.Net.HttpStatusCode.OK)
+                            {
+                                var transferUtility = new TransferUtility(client);
+                                var transferRequest = new TransferUtilityUploadRequest
+                                {
+                                    FilePath = AppDomain.CurrentDomain.BaseDirectory + "\\" + fileName + extenstion,
+                                    BucketName = bucketName,
+                                    CannedACL = S3CannedACL.PublicRead
+                                };
+                                transferUtility.Upload(transferRequest);
+                            }
+                        }
+                    }
+                    catch (AmazonS3Exception e)
+                    {
+                        Console.WriteLine(e.Message.ToString());
+                    }
+
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message.ToString());
+                    }
+
+                    //productVM.Product.ImageUrl = @"\images\products\" + fileName + extenstion;
                 }
                 else
                 {

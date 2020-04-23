@@ -137,25 +137,6 @@ namespace MainMusicStore.Areas.Identity.Pages.Account
                 {
                     _logger.LogInformation("User created a new account with password.");
 
-                    if (!await _roleManager.RoleExistsAsync(ProjectConstant.Role_Admin))
-                    {
-                        await _roleManager.CreateAsync(new IdentityRole(ProjectConstant.Role_Admin));
-                    }
-                    if (!await _roleManager.RoleExistsAsync(ProjectConstant.Role_Employee))
-                    {
-                        await _roleManager.CreateAsync(new IdentityRole(ProjectConstant.Role_Employee));
-                    }
-                    if (!await _roleManager.RoleExistsAsync(ProjectConstant.Role_User_Comp))
-                    {
-                        await _roleManager.CreateAsync(new IdentityRole(ProjectConstant.Role_User_Comp));
-                    }
-                    if (!await _roleManager.RoleExistsAsync(ProjectConstant.Role_User_Indi))
-                    {
-                        await _roleManager.CreateAsync(new IdentityRole(ProjectConstant.Role_User_Indi));
-                    }
-
-                    //await _userManager.AddToRoleAsync(user, ProjectConstant.Role_Admin);
-
                     if (user.Role == null)
                     {
                         await _userManager.AddToRoleAsync(user, ProjectConstant.Role_User_Indi);

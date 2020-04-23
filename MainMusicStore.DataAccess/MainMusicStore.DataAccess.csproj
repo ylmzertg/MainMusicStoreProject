@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MainMusicStore.Models\MainMusicStore.Models.csproj" />
+    <ProjectReference Include="..\MainMusicStore.Utility\MainMusicStore.Utility.csproj" />
   </ItemGroup>
 
   <ItemGroup>
