@@ -96,6 +96,29 @@ namespace MainMusicStore.Areas.Admin.Controllers
             return RedirectToAction("Index");
         }
 
+        public IActionResult UpdateOrderDetails()
+        {
+            var orderHEaderFromDb = _uow.OrderHeader.GetFirstOrDefault(u => u.Id == OrderDetailVM.OrderHeader.Id);
+            orderHEaderFromDb.Name = OrderDetailVM.OrderHeader.Name;
+            orderHEaderFromDb.PhoneNumber = OrderDetailVM.OrderHeader.PhoneNumber;
+            orderHEaderFromDb.StreetAddress = OrderDetailVM.OrderHeader.StreetAddress;
+            orderHEaderFromDb.City = OrderDetailVM.OrderHeader.City;
+            orderHEaderFromDb.State = OrderDetailVM.OrderHeader.State;
+            orderHEaderFromDb.PostCode = OrderDetailVM.OrderHeader.PostCode;
+            if (OrderDetailVM.OrderHeader.Carrier != null)
+            {
+                orderHEaderFromDb.Carrier = OrderDetailVM.OrderHeader.Carrier;
+            }
+            if (OrderDetailVM.OrderHeader.TrackingNumber != null)
+            {
+                orderHEaderFromDb.TrackingNumber = OrderDetailVM.OrderHeader.TrackingNumber;
+            }
+
+            _uow.Save();
+            TempData["Error"] = "Order Details Updated Successfully.";
+            return RedirectToAction("Details", "Order", new { id = orderHEaderFromDb.Id });
+        }
+
         #region APICALLS
 
         [HttpGet]
